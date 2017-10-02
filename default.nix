@@ -1,5 +1,5 @@
 { mkDerivation, acid-state, attoparsec, base, bytestring
-, containers, safecopy, stdenv, text, time
+, containers, mtl, safecopy, stdenv, text, time
 }:
 mkDerivation {
   pname = "the-project";
@@ -8,7 +8,8 @@ mkDerivation {
   isLibrary = false;
   isExecutable = true;
   executableHaskellDepends = [
-    acid-state attoparsec base bytestring containers safecopy text time
+    acid-state attoparsec base bytestring containers mtl safecopy text
+    time
   ];
   description = "A university project management system [small]";
   license = stdenv.lib.licenses.bsd3;
