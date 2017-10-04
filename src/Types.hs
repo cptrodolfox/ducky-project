@@ -109,14 +109,14 @@ data School = School { schoolId    :: !SchoolId
                      , schoolName  :: !C.ByteString
                      , students    :: ![Student]
                      , employees   :: ![Employee]
-                     , departments :: ![DeptId]
+                     , departments :: ![Department]
                      }
                deriving (Eq, Show, Typeable)
 deriveSafeCopy 0 'base ''School
 
 data University = University { uniId   :: !UniId
                              , uniName :: !C.ByteString
-                             , schools :: ![SchoolId]
+                             , schools :: ![School]
                              }
                    deriving (Eq, Show, Typeable)
 deriveSafeCopy 0 'base ''University
