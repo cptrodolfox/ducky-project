@@ -10,57 +10,60 @@ import           Control.Monad.State   (modify)
 import           Data.Acid
 import qualified Data.ByteString.Char8 as C
 import           Data.Function
-import qualified Data.IntMap           as IM
-import           Data.Map              as M
-import           Data.SafeCopy
+import           Data.IntMap           (IntMap)
+import           Data.Map              (Map)
 import           Data.SafeCopy
 import           Data.Time
 import           Data.Time.Calendar
 import           Data.Typeable
 
 newtype SchoolId = SchoolId Integer
- deriving (Eq, Show, Typeable)
+ deriving (Eq, Show, Typeable, Ord)
 deriveSafeCopy 0 'base ''SchoolId
 
 newtype DeptId = DeptId Integer
- deriving (Eq, Show, Typeable)
+ deriving (Eq, Show, Typeable, Ord)
 deriveSafeCopy 0 'base ''DeptId
 
 newtype UniId = UniId Integer
- deriving (Eq, Show, Typeable)
+ deriving (Eq, Show, Typeable, Ord)
 deriveSafeCopy 0 'base ''UniId
 
 newtype NGOId = NGOId Integer
- deriving (Eq, Show, Typeable)
+ deriving (Eq, Show, Typeable, Ord)
 deriveSafeCopy 0 'base ''NGOId
 
 newtype GOId = GOId Integer
- deriving (Eq, Show, Typeable)
+ deriving (Eq, Show, Typeable, Ord)
 deriveSafeCopy 0 'base ''GOId
 
 newtype GrantId = GrantId Integer
- deriving (Eq, Show, Typeable)
+ deriving (Eq, Show, Typeable, Ord)
 deriveSafeCopy 0 'base ''GrantId
 
 newtype ProjectId =  ProjectId Integer
- deriving (Eq, Show, Typeable)
+ deriving (Eq, Show, Typeable, Ord)
 deriveSafeCopy 0 'base ''ProjectId
 
 newtype CompanyId = CompanyId Integer
- deriving (Eq, Show, Typeable)
+ deriving (Eq, Show, Typeable, Ord)
 deriveSafeCopy 0 'base ''CompanyId
 
 newtype ResultId = ResultId Integer
- deriving (Eq, Show, Typeable)
+ deriving (Eq, Show, Typeable, Ord)
 deriveSafeCopy 0 'base ''ResultId
 
 newtype PatentId = PatentId Integer
- deriving (Eq, Show, Typeable)
+ deriving (Eq, Show, Typeable, Ord)
 deriveSafeCopy 0 'base ''PatentId
 
 newtype PubId = PubId Integer
- deriving (Eq, Show, Typeable)
+ deriving (Eq, Show, Typeable, Ord)
 deriveSafeCopy 0 'base ''PubId
+
+newtype DNI = DNI Integer
+  deriving (Eq, Show, Ord, Typeable)
+deriveSafeCopy 0 'base ''DNI
 
 data Degree = Bachelor
                | Master
@@ -82,22 +85,22 @@ deriveSafeCopy 0 'base ''NGOType
 
 data Student = Student { stdFname    :: !C.ByteString
                        , stdLname    :: !C.ByteString
-                       , stdDni      :: !Integer
+                       , stdDni      :: !DNI
                        , stdPi       :: !Bool
                        , stdBirthday :: !Day
                        }
                 deriving (Eq, Show, Typeable)
-deriveSafeCopy 0 'base ''Student
+deriveSafeCopy 1 'base ''Student
 
 data Employee = Employee { empFname    :: !C.ByteString
                          , empLname    :: !C.ByteString
-                         , empDni      :: !Integer
+                         , empDni      :: !DNI
                          , empPi       :: !Bool
                          , empBirthday :: !Day
                          , empStudies  :: !Degree
                          }
                  deriving (Eq, Show, Typeable)
-deriveSafeCopy 0 'base ''Employee
+deriveSafeCopy 1 'base ''Employee
 
 data Department = Department { deptId   :: !DeptId
                              , deptName :: !C.ByteString
@@ -107,19 +110,12 @@ deriveSafeCopy 0 'base ''Department
 
 data School = School { schoolId    :: !SchoolId
                      , schoolName  :: !C.ByteString
-                     , students    :: ![Student]
-                     , employees   :: ![Employee]
-                     , departments :: ![Department]
+                     , students    :: ![DNI]
+                     , employees   :: ![DNI]
+                     , departments :: ![DeptId]
                      }
                deriving (Eq, Show, Typeable)
-deriveSafeCopy 0 'base ''School
-
-data University = University { uniId   :: !UniId
-                             , uniName :: !C.ByteString
-                             , schools :: ![School]
-                             }
-                   deriving (Eq, Show, Typeable)
-deriveSafeCopy 0 'base ''University
+deriveSafeCopy 1 'base ''School
 
 data NGO = NGO { ngoName :: !C.ByteString
                , ngoType :: !NGOType
@@ -171,13 +167,57 @@ data Result = Publication { pubId       :: !PubId
              deriving (Eq, Show, Typeable)
 deriveSafeCopy 0 'base ''Result
 
-data Company = Company { companyId     :: !CompanyId
+data Company = Company { companyIdimport
                        , companyName   :: !C.ByteString
                        , companyType   :: !C.ByteString
                        , companyProfit :: !Double
                        }
                 deriving (Eq, Show, Typeable)
+
 deriveSafeCopy 0 'base ''Company
+
+-- DATABASES----
+
+data StudentDb = StudentDb (Map DNI Student)
+deriveSafeCopy 0 'base ''StudentDb
+
+data EmployeeDb = EmployeeDb (Map DNI Employee)
+deriveSafeCopy 0 'base ''EmployeeDb
+
+data DepartmentDb = DepartmentDb (Map DeptId Department)
+deriveSafeCopy 0 'base ''DepartmentDb
+
+data SchoolDb = SchoolDb (Map SchoolId School)
+deriveSafeCopy 0 'base ''SchoolDb
+
+data ResultDb = ResultDb (IntMap Result)
+deriveSafeCopy 0 'base ''ResultDb
+
+data CompanyDb = CompanyDb (IntMap Company)
+deriveSafeCopy 0 'base ''CompanyDb
+
+data NGODb = NGODb (IntMap NGO)
+deriveSafeCopy 0 'base ''NGODb
+
+data GODb = GODb (IntMap GovernmentalOrganization)
+deriveSafeCopy 0 'base ''GODb
+
+data GrantDb = GrantDb (IntMap Grant)
+deriveSafeCopy 0 'base ''GrantDb
+
+data ProjectDb = ProjectDb (IntMap Project)
+deriveSafeCopy 0 'base ''ProjectDb
+
+data University = University { studentDb        :: StudentDb
+                                 , employeeDb   :: EmployeeDb
+                                 , departmentDb :: DepartmentDb
+                                 , schoolDb     :: SchoolDb
+                                 , resultDb     :: ResultDb
+                                 , projectDb    :: ProjectDb
+                                 , grantDb      :: GrantDb
+                                 , name         :: !C.ByteString
+                                 }
+deriveSafeCopy 1 'base ''University
 
 
 
