@@ -118,3 +118,23 @@ addGO gov = modify go
       else let index = fst $ IM.findMax db in
         IM.insert (index + 1) gov db
 
+-- Search for a student by the DNI.
+searchStudentDNI :: DNI -> Query StudentDb (Maybe Student)
+searchStudentDNI dni = (M.lookup dni) . (\(StudentDb db) -> db) <$> ask
+
+-- Search for a employee by the DNI.
+searchEmployeeDNI :: DNI -> Query EmployeeDb (Maybe Employee)
+searchEmployeeDNI dni = (M.lookup dni) . (\(EmployeeDb db) -> db) <$> ask
+
+-- Search for a publication by Authors
+searchPubAuthor :: C.ByteString -> Query ResultDb (Maybe Result)
+searchPubAuthor author = map fst $ IM.toList
+  . (IM.filter (\(Publication{authors = pubAuthors})
+                -> map (\x -> x == author) authors))
+  . (\(ResultDb db) -> db) <$> ask
+
+
+--   getMail :: T.Username -> Query MailDb T.MailBox
+-- getMail user = (\(Just mailbox) -> mailbox)
+--   . (Map.lookup user)
+--   . allmails <$> ask

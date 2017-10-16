@@ -77,10 +77,10 @@ data UniType = Public
              deriving (Eq, Show, Typeable)
 deriveSafeCopy 0 'base ''UniType
 
-data NGOType = National
+data NType = National
              | International
               deriving (Eq, Show, Typeable)
-deriveSafeCopy 0 'base ''NGOType
+deriveSafeCopy 0 'base ''NType
 
 
 data Student = Student { stdFname    :: !C.ByteString
@@ -118,10 +118,10 @@ data School = School { schoolId    :: !SchoolId
 deriveSafeCopy 1 'base ''School
 
 data NGO = NGO { ngoName :: !C.ByteString
-               , ngoType :: !NGOType
+               , ngoType :: !NType
                }
             deriving (Eq, Show, Typeable)
-deriveSafeCopy 0 'base ''NGO
+deriveSafeCopy 1 'base ''NGO
 
 data GovernmentalOrganization = GO { goId  :: !GOId
                                   , goName :: !C.ByteString
@@ -138,13 +138,13 @@ data Grant = Grant { grantId          :: !GrantId
 deriveSafeCopy 0 'base ''Grant
 
 data Project = Project { projectId     :: !ProjectId
-                       , projectTitle  :: !C.ByteString
+                       , projectName   :: !C.ByteString
                        , projectBudget :: !Double
                        , projectGrants :: !GrantId
                        , projectDesp   :: !C.ByteString
                        }
                 deriving (Eq, Show, Typeable)
-deriveSafeCopy 0 'base ''Project
+deriveSafeCopy 1 'base ''Project
 
 data Result = Publication { pubId       :: !PubId
                           , pubTitle    :: !C.ByteString
@@ -152,29 +152,32 @@ data Result = Publication { pubId       :: !PubId
                           , pubAbstract :: !C.ByteString
                           , pubMagazine :: !C.ByteString
                           , pubKeywords :: ![C.ByteString]
+                          , pubAuthors  :: ![C.ByteString]
                           }
-            | Patent { patentId     :: !PatentId
-                     , patentName   :: !C.ByteString
-                     , patentType   :: !C.ByteString
-                     , patentNumber :: !C.ByteString
-                     , patentTerm   :: !Integer
-                     , patentDate   :: !Day
+            | Patent { patentId      :: !PatentId
+                     , patentName    :: !C.ByteString
+                     , patentType    :: !C.ByteString
+                     , patentNumber  :: !C.ByteString
+                     , patentTerm    :: !Integer
+                     , patentDate    :: !Day
+                     , patentAuthors :: ![C.ByteString]
                      }
             | BiologicalOrganism --TODO
             | Molecule --TODO
             | Software --TODO
             | Hardware --TODO
              deriving (Eq, Show, Typeable)
-deriveSafeCopy 0 'base ''Result
+deriveSafeCopy 1 'base ''Result
 
 data Company = Company { companyIdimport
                        , companyName   :: !C.ByteString
-                       , companyType   :: !C.ByteString
+                       , companyType   :: !NType
                        , companyProfit :: !Double
                        }
                 deriving (Eq, Show, Typeable)
 
 deriveSafeCopy 0 'base ''Company
+
 
 -- DATABASES----
 
@@ -216,8 +219,9 @@ data University = University { studentDb        :: StudentDb
                                  , projectDb    :: ProjectDb
                                  , grantDb      :: GrantDb
                                  , name         :: !C.ByteString
+                                 , uniType      :: !UniType
                                  }
-deriveSafeCopy 1 'base ''University
+deriveSafeCopy 2 'base ''University
 
 
 
