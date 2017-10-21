@@ -150,7 +150,7 @@ data Result = Publication { pubId       :: !PubId
                           , pubTitle    :: !C.ByteString
                           , pubDate     :: !Day
                           , pubAbstract :: !C.ByteString
-                          , pubMagazine :: !C.ByteString
+                          , pubJournal  :: !C.ByteString
                           , pubKeywords :: ![C.ByteString]
                           , pubAuthors  :: ![C.ByteString]
                           }
@@ -167,7 +167,7 @@ data Result = Publication { pubId       :: !PubId
             | Software --TODO
             | Hardware --TODO
              deriving (Eq, Show, Typeable)
-deriveSafeCopy 1 'base ''Result
+deriveSafeCopy 2 'base ''Result
 
 data Company = Company { companyIdimport
                        , companyName   :: !C.ByteString

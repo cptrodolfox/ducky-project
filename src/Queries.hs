@@ -11,7 +11,7 @@ import           Data.Acid
 import qualified Data.ByteString.Char8 as C
 import           Data.Function
 import qualified Data.IntMap           as IM
-import           Data.Map              as M
+import qualified Data.Map              as M
 import           Data.SafeCopy
 import           Data.Time
 import           Data.Time.Calendar
@@ -127,11 +127,19 @@ searchEmployeeDNI :: DNI -> Query EmployeeDb (Maybe Employee)
 searchEmployeeDNI dni = (M.lookup dni) . (\(EmployeeDb db) -> db) <$> ask
 
 -- Search for a publication by Authors
-searchPubAuthor :: C.ByteString -> Query ResultDb (Maybe Result)
-searchPubAuthor author = map fst $ IM.toList
-  . (IM.filter (\(Publication{authors = pubAuthors})
-                -> map (\x -> x == author) authors))
+searchPubAuthor :: C.ByteString -> Query ResultDb [Result]
+searchPubAuthor author = (map snd) . IM.toList
+  . (IM.filter (\(Publication{pubAuthors = authors})
+                -> any ((==) author) authors))
   . (\(ResultDb db) -> db) <$> ask
+
+-- Search for a publication by Keyword
+searchPubKeyword :: C.ByteString -> Query ResultDb [Result]
+searchPubKeyword word = (map snd) . IM.toList
+  . (IM.filter (\(Publication{pubKeywords = words})
+                -> any ((==) word) words))
+  . (\(ResultDb db) -> db) <$> ask
+
 
 
 --   getMail :: T.Username -> Query MailDb T.MailBox
