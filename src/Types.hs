@@ -223,5 +223,38 @@ data University = University { studentDb        :: StudentDb
                                  }
 deriveSafeCopy 2 'base ''University
 
+-- Relationships
+
+-- Defines the employer and employee relationship between a university,
+-- department and school, and a employee. (Employer, Employee)
+data Employs = EmployedByDept (DeptId, DNI)
+             | EmployedBySchool (SchoolId, DNI)
+             | EmployedByUniversity DNI
+             deriving (Show, Eq)
+
+deriveSafeCopy 1 'base ''Employs
+
+-- Defines the has relationship between entities.
+data HasRel = DeptHasStudent (DeptId, DNI)
+            | SchoolHasDept (SchoolId, DeptId)
+            | UniversityHasSchool SchoolId
+            | UniversityHasProject Int
+            | UniversityHasGrant Int
+            | ProjectHasGrant (Int, Int)
+            deriving (Show, Eq)
+
+deriveSafeCopy 0 'base ''HasRel
+
+-- Defines the relation works on between employee and student, and project.
+data WorksOn = StudentWorksOn (DNI, Int)
+             | EmployeeWorksOn (DNI, Int)
+
+deriveSafeCopy 0 'base ''WorksOn
+
+-- Defines the funds relationship between company, go and ngo, and grants.
+-- (go / ngo / company, grant).
+data Funds = CompanyFunds (Int, Int)
+           | NGOFunds (Int, Int)
+           | GOFunds (Int, Int)
 
 

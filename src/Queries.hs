@@ -140,7 +140,45 @@ searchPubKeyword word = (map snd) . IM.toList
                 -> any ((==) word) words))
   . (\(ResultDb db) -> db) <$> ask
 
+-- Gets all the departments.
+getDeptAll :: Query DepartmentDb [(DeptId, Department)]
+getDeptAll = M.toList . (\(DepartmentDb db) -> db) <$> ask
 
+-- Gets all the schools.
+getSchoolAll :: Query SchoolDb [(SchoolId, School)]
+getSchoolAll = M.toList . (\(SchoolDb db) -> db) <$> ask
+
+-- Gets all the students.
+getStudentAll :: Query StudentDb [(DNI, Student)]
+getStudentAll = M.toList . (\(StudentDb db) -> db) <$> ask
+
+-- Gets all the Employees.
+getEmployeeAll :: Query EmployeeDb [(DNI, Employee)]
+getEmployeeAll = M.toList . (\(EmployeeDb db) -> db) <$> ask
+
+-- Gets all Results.
+getResultAll :: Query ResultDb [Result]
+getResultAll = (map snd) . IM.toList . (\(ResultDb db) -> db) <$> ask
+
+-- Gets all the Companies.
+getCompAll :: Query CompanyDb [Company]
+getCompAll = (map snd) . IM.toList . (\(CompanyDb db) -> db) <$> ask
+
+-- Gets all the NGOs.
+getNGOAll :: Query NGODb [NGO]
+getNGOAll = (map snd) . IM.toList . (\(NGODb db) -> db) <$> ask
+
+-- Gets all the GOs.
+getGOAll :: Query GODb [GovernmentalOrganization]
+getGOAll = (map snd) . IM.toList . (\(GODb db) -> db) <$> ask
+
+-- Gets all the Grants.
+getGrantAll :: Query GrantDb [Grant]
+getGrantAll = (map snd) . IM.toList . (\(GrantDb db) -> db) <$> ask
+
+-- Get all the Projects.
+getProjectAll :: Query ProjectDb [Project]
+getProjectAll = (map snd) . IM.toList . (\(ProjectDb db) -> db) <$> ask
 
 --   getMail :: T.Username -> Query MailDb T.MailBox
 -- getMail user = (\(Just mailbox) -> mailbox)
