@@ -63,60 +63,60 @@ addResult :: Result -> Update ResultDb ()
 addResult res = modify go
   where
     go (ResultDb db) = ResultDb $
-      if IM.null db
-      then IM.singleton 1 res
-      else let (index, _) = IM.findMax db in
-           IM.insert (index + 1) res db
+      if M.null db
+      then M.singleton (fromIntegral 1) res
+      else let (index, _) = M.findMax db in
+           M.insert (index + 1) res db
 
 -- Adds a company to the companies database, increments the index.
 addCompany :: Company -> Update CompanyDb ()
 addCompany comp = modify go
   where
     go (CompanyDb db) = CompanyDb $
-      if IM.null db
-      then IM.singleton 1 comp
-      else let index = fst $ IM.findMax db in
-        IM.insert (index + 1) comp db
+      if M.null db
+      then M.singleton (fromIntegral 1) comp
+      else let index = fst $ M.findMax db in
+        M.insert (index + 1) comp db
 
 -- Adds a Grant to the grants database, increments the index.
 addGrant :: Grant -> Update GrantDb ()
 addGrant grant = modify go
   where
     go (GrantDb db) = GrantDb $
-      if IM.null db
-      then IM.singleton 1 grant
-      else let index = fst $ IM.findMax db in
-        IM.insert (index + 1) grant db
+      if M.null db
+      then M.singleton (fromIntegral 1) grant
+      else let index = fst $ M.findMax db in
+        M.insert (index + 1) grant db
 
 -- Adds a Project to the project database, increments the index.
 addProject :: Project -> Update ProjectDb ()
 addProject pro = modify go
   where
     go (ProjectDb db) = ProjectDb $
-      if IM.null db
-      then IM.singleton 1 pro
-      else let index = fst $ IM.findMax db in
-        IM.insert (index + 1) pro db
+      if M.null db
+      then M.singleton (fromIntegral 1) pro
+      else let index = fst $ M.findMax db in
+        M.insert (index + 1) pro db
 
 -- Adds a NGO to the ngos database, increments the index.
 addNGO :: NGO -> Update NGODb ()
 addNGO ngo = modify go
   where
     go (NGODb db) = NGODb $
-      if IM.null db
-      then IM.singleton 1 ngo
-      else let index = fst $ IM.findMax db in
-        IM.insert (index + 1) ngo db
+      if M.null db
+      then M.singleton (fromIntegral 1) ngo
+      else let index = fst $ M.findMax db in
+        M.insert (index + 1) ngo db
 
 -- Adds a GOD to the gods database, increments the index.
 addGO :: GovernmentalOrganization -> Update GODb ()
 addGO gov = modify go
   where
     go (GODb db) = GODb $
-      if IM.null db
-      then IM.singleton 1 gov
-      else let index = fst $ IM.findMax db in
-        IM.insert (index + 1) gov db
+      if M.null db
+      then M.singleton (fromIntegral 1) gov
+      else let index = fst $ M.findMax db in
+        M.insert (index + 1) gov db
 
 -- Search for a student by the DNI.
 searchStudentDNI :: DNI -> Query StudentDb (Maybe Student)
@@ -128,15 +128,15 @@ searchEmployeeDNI dni = (M.lookup dni) . (\(EmployeeDb db) -> db) <$> ask
 
 -- Search for a publication by Authors
 searchPubAuthor :: C.ByteString -> Query ResultDb [Result]
-searchPubAuthor author = (map snd) . IM.toList
-  . (IM.filter (\(Publication{pubAuthors = authors})
+searchPubAuthor author = (map snd) . M.toList
+  . (M.filter (\(Publication{pubAuthors = authors})
                 -> any ((==) author) authors))
   . (\(ResultDb db) -> db) <$> ask
 
 -- Search for a publication by Keyword
 searchPubKeyword :: C.ByteString -> Query ResultDb [Result]
-searchPubKeyword word = (map snd) . IM.toList
-  . (IM.filter (\(Publication{pubKeywords = words})
+searchPubKeyword word = (map snd) . M.toList
+  . (M.filter (\(Publication{pubKeywords = words})
                 -> any ((==) word) words))
   . (\(ResultDb db) -> db) <$> ask
 
@@ -158,29 +158,207 @@ getEmployeeAll = M.toList . (\(EmployeeDb db) -> db) <$> ask
 
 -- Gets all Results.
 getResultAll :: Query ResultDb [Result]
-getResultAll = (map snd) . IM.toList . (\(ResultDb db) -> db) <$> ask
+getResultAll = (map snd) . M.toList . (\(ResultDb db) -> db) <$> ask
 
 -- Gets all the Companies.
 getCompAll :: Query CompanyDb [Company]
-getCompAll = (map snd) . IM.toList . (\(CompanyDb db) -> db) <$> ask
+getCompAll = (map snd) . M.toList . (\(CompanyDb db) -> db) <$> ask
 
 -- Gets all the NGOs.
 getNGOAll :: Query NGODb [NGO]
-getNGOAll = (map snd) . IM.toList . (\(NGODb db) -> db) <$> ask
+getNGOAll = (map snd) . M.toList . (\(NGODb db) -> db) <$> ask
 
 -- Gets all the GOs.
 getGOAll :: Query GODb [GovernmentalOrganization]
-getGOAll = (map snd) . IM.toList . (\(GODb db) -> db) <$> ask
+getGOAll = (map snd) . M.toList . (\(GODb db) -> db) <$> ask
 
 -- Gets all the Grants.
 getGrantAll :: Query GrantDb [Grant]
-getGrantAll = (map snd) . IM.toList . (\(GrantDb db) -> db) <$> ask
+getGrantAll = (map snd) . M.toList . (\(GrantDb db) -> db) <$> ask
 
 -- Get all the Projects.
 getProjectAll :: Query ProjectDb [Project]
-getProjectAll = (map snd) . IM.toList . (\(ProjectDb db) -> db) <$> ask
+getProjectAll = (map snd) . M.toList . (\(ProjectDb db) -> db) <$> ask
 
---   getMail :: T.Username -> Query MailDb T.MailBox
--- getMail user = (\(Just mailbox) -> mailbox)
---   . (Map.lookup user)
---   . allmails <$> ask
+-- Adds the relationship between a Student and a Department.
+addStudentToDept :: DNI -> DeptId -> Update HasRelDb ()
+addStudentToDept dni dept = modify go
+  where
+    go (HasRelDb db) = HasRelDb $
+      let rel = DeptHasStudent dept dni in
+      if null db
+      then [rel]
+      else rel : db
+
+-- Adds the relationship between a School and a Department.
+addDeptToSchool :: DeptId -> SchoolId -> Update HasRelDb ()
+addDeptToSchool dept sch = modify go
+  where
+    go (HasRelDb db) = HasRelDb $
+      let rel = SchoolHasDept sch dept in
+      if null db
+      then [rel]
+      else rel : db
+
+-- Adds the relationship between a University and a School.
+addSchoolToUni :: SchoolId -> UniId -> Update HasRelDb ()
+addSchoolToUni sch uni = modify go
+  where
+    go (HasRelDb db) = HasRelDb $
+      let rel = UniversityHasSchool uni sch in
+      if null db
+      then [rel]
+      else rel : db
+
+ -- Adds the relationship between a University and a Project.
+addProjectToUni :: ProjectId -> UniId -> Update HasRelDb ()
+addProjectToUni pro uni = modify go
+  where
+    go (HasRelDb db) = HasRelDb $
+      let rel = UniversityHasProject uni pro in
+      if null db
+      then [rel]
+      else rel : db
+
+-- Adds the relationship between a University and a Grant.
+addGrantToUni :: GrantId -> UniId -> Update HasRelDb ()
+addGrantToUni grant uni =  modify go
+  where
+    go (HasRelDb db) = HasRelDb $
+      let rel = UniversityHasGrant uni grant in
+      if null db
+      then [rel]
+      else rel : db
+
+-- Adds the relationship between a Project and a Grant.
+addGrantToProject :: GrantId -> ProjectId -> Update HasRelDb ()
+addGrantToProject grant pro = modify go
+  where
+    go (HasRelDb db) = HasRelDb $
+      let rel = ProjectHasGrant pro grant in
+      if null db
+      then [rel]
+      else rel : db
+
+-- Adds the relationship between a Student and a Project
+addStudentToProject :: DNI -> ProjectId -> Update WorksOnDb ()
+addStudentToProject stu pro = modify go
+  where
+    go (WorksOnDb db) = WorksOnDb $
+      let rel = StudentWorksOn stu pro in
+      if null db
+      then [rel]
+      else rel : db
+
+-- Adds the relationship between a Employee and a Project
+addEmployeeToProject :: DNI -> ProjectId -> Update WorksOnDb ()
+addEmployeeToProject emp pro = modify go
+  where
+    go (WorksOnDb db) = WorksOnDb $
+      let rel = EmployeeWorksOn emp pro in
+      if null db
+      then [rel]
+      else rel : db
+
+-- Adds the relationship between a Company and a Grant.
+addCompanyToGrant :: CompanyId -> GrantId -> Update FundsDb ()
+addCompanyToGrant comp grant = modify go
+  where
+    go (FundsDb db) = FundsDb $
+      let rel = CompanyFunds comp grant in
+      if null db
+      then [rel]
+      else rel : db
+
+-- Adds the relationship between a NGO and A Grant.
+addNGOToGrant :: NGOId -> GrantId -> Update FundsDb ()
+addNGOToGrant ngo grant = modify go
+  where
+    go (FundsDb db) = FundsDb $
+      let rel = NGOFunds ngo grant in
+      if null db
+      then [rel]
+      else rel : db
+
+-- Adds an employee to a Department.
+addEmployeeToDept :: DNI -> DeptId -> Update EmploysDb ()
+addEmployeeToDept emp dept = modify go
+  where
+    go (EmploysDb db) = EmploysDb $
+      let rel = EmployedByDept dept emp in
+      if null db
+      then [rel]
+      else rel : db
+
+-- Adds an employee to a School.
+addEmployeeToSchool :: DNI -> SchoolId -> Update EmploysDb ()
+addEmployeeToSchool emp sch = modify go
+  where
+    go (EmploysDb db) = EmploysDb $
+      let rel = EmployedBySchool sch emp in
+      if null db
+      then [rel]
+      else rel : db
+
+-- Adds an employee to the University.
+addEmployeeToUni :: DNI -> UniId -> Update EmploysDb ()
+addEmployeeToUni emp uni = modify go
+  where
+    go (EmploysDb db) = EmploysDb $
+      let rel = EmployedByUniversity uni emp in
+      if null db
+      then [rel]
+      else rel : db
+
+-- Looks for the students (DNI) that belongs to a given Department.
+studentsOnDept :: DeptId -> Query HasRelDb [DNI]
+studentsOnDept dept = (foldr (\(DeptHasStudent d stu) l ->
+                              if d == dept
+                              then stu : l
+                              else l) [])
+                      . allHasRels <$> ask
+
+-- Looks for the departments that belongs to a given School.
+deptsOnSchool :: SchoolId -> Query HasRelDb [DeptId]
+deptsOnSchool sch = (foldr (\(SchoolHasDept s stu) l ->
+                                 if s == sch
+                                 then stu : l
+                                 else l) [])
+                       . allHasRels <$> ask
+
+-- Looks for the schools inside a University.
+schoolsOnUniversity :: UniId -> Query HasRelDb [SchoolId]
+schoolsOnUniversity uni = (foldr (\(UniversityHasSchool u sch) l ->
+                                    if u == uni
+                                    then sch : l
+                                    else l) [])
+                          . allHasRels <$> ask
+
+-- Looks for the Projects inside the University.
+projectsOnUniversity :: UniId -> Query HasRelDb [ProjectId]
+projectsOnUniversity uni = (foldr (\(UniversityHasProject u pro) l ->
+                                     if u == uni
+                                     then pro : l
+                                     else l) [])
+                           . allHasRels <$> ask
+
+-- Looks for the grants inside a University.
+grantsOnUniversity :: UniId -> Query HasRelDb [GrantId]
+grantsOnUniversity uni = (foldr (\(UniversityHasGrant u grant) l ->
+                                   if u == uni
+                                   then grant : l
+                                   else l) [])
+                         . allHasRels <$> ask
+
+-- Looks for the grants associated to a Project.
+grantsOnProject :: ProjectId -> Query HasRelDb [GrantId]
+grantsOnProject pro = (foldr (\(ProjectHasGrant p grant) l ->
+                                if p == pro
+                                then grant : l
+                                else l) [])
+                      . allHasRels <$> ask
+--studentsOnDept dept = (map (\(DeptHasStudent _ stu) -> stu))
+--  . (filter (\(DeptHasStudent d _) -> d == dept ))
+--  . allHasRels <$> ask
+
+--students

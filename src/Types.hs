@@ -25,33 +25,13 @@ newtype DeptId = DeptId Integer
  deriving (Eq, Show, Typeable, Ord)
 deriveSafeCopy 0 'base ''DeptId
 
-newtype UniId = UniId Integer
- deriving (Eq, Show, Typeable, Ord)
-deriveSafeCopy 0 'base ''UniId
-
-newtype NGOId = NGOId Integer
- deriving (Eq, Show, Typeable, Ord)
-deriveSafeCopy 0 'base ''NGOId
-
-newtype GOId = GOId Integer
- deriving (Eq, Show, Typeable, Ord)
-deriveSafeCopy 0 'base ''GOId
-
-newtype GrantId = GrantId Integer
- deriving (Eq, Show, Typeable, Ord)
-deriveSafeCopy 0 'base ''GrantId
-
-newtype ProjectId =  ProjectId Integer
- deriving (Eq, Show, Typeable, Ord)
-deriveSafeCopy 0 'base ''ProjectId
-
-newtype CompanyId = CompanyId Integer
- deriving (Eq, Show, Typeable, Ord)
-deriveSafeCopy 0 'base ''CompanyId
-
-newtype ResultId = ResultId Integer
- deriving (Eq, Show, Typeable, Ord)
-deriveSafeCopy 0 'base ''ResultId
+type ProjectId  = Integer
+type GrantId  = Integer
+type ResultId = Integer
+type GOId = Integer
+type NGOId = Integer
+type CompanyId = Integer
+type UniId = Integer
 
 newtype PatentId = PatentId Integer
  deriving (Eq, Show, Typeable, Ord)
@@ -193,22 +173,22 @@ deriveSafeCopy 0 'base ''DepartmentDb
 data SchoolDb = SchoolDb (Map SchoolId School)
 deriveSafeCopy 0 'base ''SchoolDb
 
-data ResultDb = ResultDb (IntMap Result)
-deriveSafeCopy 0 'base ''ResultDb
+data ResultDb = ResultDb (Map ResultId Result)
+deriveSafeCopy 1 'base ''ResultDb
 
-data CompanyDb = CompanyDb (IntMap Company)
-deriveSafeCopy 0 'base ''CompanyDb
+data CompanyDb = CompanyDb (Map CompanyId Company)
+deriveSafeCopy 1 'base ''CompanyDb
 
-data NGODb = NGODb (IntMap NGO)
+data NGODb = NGODb (Map NGOId NGO)
 deriveSafeCopy 0 'base ''NGODb
 
-data GODb = GODb (IntMap GovernmentalOrganization)
+data GODb = GODb (Map GOId GovernmentalOrganization)
 deriveSafeCopy 0 'base ''GODb
 
-data GrantDb = GrantDb (IntMap Grant)
+data GrantDb = GrantDb (Map GrantId Grant)
 deriveSafeCopy 0 'base ''GrantDb
 
-data ProjectDb = ProjectDb (IntMap Project)
+data ProjectDb = ProjectDb (Map ProjectId Project)
 deriveSafeCopy 0 'base ''ProjectDb
 
 data University = University { studentDb        :: StudentDb
@@ -227,34 +207,50 @@ deriveSafeCopy 2 'base ''University
 
 -- Defines the employer and employee relationship between a university,
 -- department and school, and a employee. (Employer, Employee)
-data Employs = EmployedByDept (DeptId, DNI)
-             | EmployedBySchool (SchoolId, DNI)
-             | EmployedByUniversity DNI
+data Employs = EmployedByDept DeptId DNI
+             | EmployedBySchool SchoolId DNI
+             | EmployedByUniversity UniId DNI
              deriving (Show, Eq)
 
-deriveSafeCopy 1 'base ''Employs
+deriveSafeCopy 2 'base ''Employs
 
 -- Defines the has relationship between entities.
-data HasRel = DeptHasStudent (DeptId, DNI)
-            | SchoolHasDept (SchoolId, DeptId)
-            | UniversityHasSchool SchoolId
-            | UniversityHasProject Int
-            | UniversityHasGrant Int
-            | ProjectHasGrant (Int, Int)
+data HasRel = DeptHasStudent DeptId DNI
+            | SchoolHasDept SchoolId DeptId
+            | UniversityHasSchool UniId SchoolId
+            | UniversityHasProject UniId ProjectId
+            | UniversityHasGrant UniId GrantId
+            | ProjectHasGrant ProjectId GrantId
             deriving (Show, Eq)
 
-deriveSafeCopy 0 'base ''HasRel
+deriveSafeCopy 3 'base ''HasRel
 
 -- Defines the relation works on between employee and student, and project.
-data WorksOn = StudentWorksOn (DNI, Int)
-             | EmployeeWorksOn (DNI, Int)
+data WorksOn = StudentWorksOn DNI ProjectId
+             | EmployeeWorksOn DNI ProjectId
 
-deriveSafeCopy 0 'base ''WorksOn
+deriveSafeCopy 1 'base ''WorksOn
 
 -- Defines the funds relationship between company, go and ngo, and grants.
 -- (go / ngo / company, grant).
-data Funds = CompanyFunds (Int, Int)
-           | NGOFunds (Int, Int)
-           | GOFunds (Int, Int)
+data Funds = CompanyFunds CompanyId GrantId
+           | NGOFunds NGOId GrantId
+           | GOFunds GOId GrantId
+deriveSafeCopy 1 'base ''Funds
 
+-- The database for the hasRel relationships.
+data HasRelDb = HasRelDb {allHasRels :: [HasRel]}
+deriveSafeCopy 0 'base ''HasRelDb
+
+-- The database for the worksOn relationships.
+data WorksOnDb = WorksOnDb {allWorksOn :: [WorksOn]}
+deriveSafeCopy 0 'base ''WorksOnDb
+
+-- The database for the Funds relationships.
+data FundsDb = FundsDb {allFunds :: [Funds]}
+deriveSafeCopy 0 'base ''FundsDb
+
+-- The database for the employs relationships.
+data EmploysDb = EmploysDb {allEmploys :: [Employs]}
+deriveSafeCopy 0 'base ''EmploysDb
 
