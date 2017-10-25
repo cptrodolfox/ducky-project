@@ -159,7 +159,7 @@ data Company = Company { companyIdimport
 deriveSafeCopy 0 'base ''Company
 
 
--- DATABASES----
+-- |DATABASES----
 
 data StudentDb = StudentDb (Map DNI Student)
 deriveSafeCopy 0 'base ''StudentDb
@@ -203,10 +203,10 @@ data University = University { studentDb        :: StudentDb
                                  }
 deriveSafeCopy 2 'base ''University
 
--- Relationships
+-- |Relationships
 
--- Defines the employer and employee relationship between a university,
--- department and school, and a employee. (Employer, Employee)
+-- |Defines the employer and employee relationship between a university,
+-- |department and school, and a employee. (Employer, Employee)
 data Employs = EmployedByDept DeptId DNI
              | EmployedBySchool SchoolId DNI
              | EmployedByUniversity UniId DNI
@@ -214,7 +214,7 @@ data Employs = EmployedByDept DeptId DNI
 
 deriveSafeCopy 2 'base ''Employs
 
--- Defines the has relationship between entities.
+-- |Defines the has relationship between entities.
 data HasRel = DeptHasStudent DeptId DNI
             | SchoolHasDept SchoolId DeptId
             | UniversityHasSchool UniId SchoolId
@@ -225,32 +225,32 @@ data HasRel = DeptHasStudent DeptId DNI
 
 deriveSafeCopy 3 'base ''HasRel
 
--- Defines the relation works on between employee and student, and project.
+-- |Defines the relation works on between employee and student, and project.
 data WorksOn = StudentWorksOn DNI ProjectId
              | EmployeeWorksOn DNI ProjectId
 
 deriveSafeCopy 1 'base ''WorksOn
 
--- Defines the funds relationship between company, go and ngo, and grants.
--- (go / ngo / company, grant).
+-- |Defines the funds relationship between company, go and ngo, and grants.
+-- |(go / ngo / company, grant).
 data Funds = CompanyFunds CompanyId GrantId
            | NGOFunds NGOId GrantId
            | GOFunds GOId GrantId
 deriveSafeCopy 1 'base ''Funds
 
--- The database for the hasRel relationships.
+-- |The database for the hasRel relationships.
 data HasRelDb = HasRelDb {allHasRels :: [HasRel]}
 deriveSafeCopy 0 'base ''HasRelDb
 
--- The database for the worksOn relationships.
+-- |The database for the worksOn relationships.
 data WorksOnDb = WorksOnDb {allWorksOn :: [WorksOn]}
 deriveSafeCopy 0 'base ''WorksOnDb
 
--- The database for the Funds relationships.
+-- |The database for the Funds relationships.
 data FundsDb = FundsDb {allFunds :: [Funds]}
 deriveSafeCopy 0 'base ''FundsDb
 
--- The database for the employs relationships.
+-- |The database for the employs relationships.
 data EmploysDb = EmploysDb {allEmploys :: [Employs]}
 deriveSafeCopy 0 'base ''EmploysDb
 
