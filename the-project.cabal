@@ -17,7 +17,8 @@ cabal-version:       >=1.10
 
 executable the-project
   main-is:             Main.hs
-  -- other-modules:       
+  other-modules:       Queries
+                     , Types
   -- other-extensions:    
   build-depends:       base >=4.9 && <4.10
                      , acid-state
