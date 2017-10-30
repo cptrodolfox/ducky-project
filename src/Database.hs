@@ -154,6 +154,27 @@ addPledge gId pleg = state go
     go uni = (\x -> (x, uni)) . fmap (\g@Grant{grant_pledges = ps}
                            -> g {grant_pledges = pleg : ps})
              . lookup gId $ grants uni
+
+-- | Adds a result to a project, returns the updated Project if the project does
+-- not exist returns Nothing.
+addResult :: ResultId -> ProjectId -> Update University (Maybe Project)
+addResult rId pId = state go
+  where
+    go uni = (\x -> (x, uni))
+      . fmap (\p@Project{project_results = res}
+              -> p {project_results = rId : res})
+      . lookup pId $ projects uni
+
+-- | Adds a participant to a project, returns the updated Project. If the
+-- project does not exist return Nothing.
+addParticipant :: ProjectId -> Participant -> Update University (Maybe Project)
+addParticipant pId par = state go
+  where
+    go uni = (\x -> (x, uni)) . fmap (\p@Project{project_participants = pars}
+              -> p {project_participants = par : pars})
+      . lookup pId $ projects uni
+
+
 -------------------------------------------------------------------
 ----------------------Database queries  ---------------------------
 -------------------------------------------------------------------

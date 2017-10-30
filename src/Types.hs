@@ -246,6 +246,9 @@ type Projects = Map ProjectId Project
 -- | A database of the assignations.
 type Assignations = [Assignation]
 
+-- | A database of the results inside the university.
+type Results = Map ResultId Result
+
 -- | A university, stores all the relevant databases for the university.
 data University = University { name         ::  !Name
                              , students     :: !Students -- ^The students that
@@ -270,5 +273,8 @@ data University = University { name         ::  !Name
                              , grants       :: !Grants -- ^The grants given to
                                                        -- projects inside the
                                                        -- university.
+                             , results      :: !Results -- ^The results of
+                                                        -- projects done inside
+                                                        -- the university.
                              } deriving (Show)
 deriveSafeCopy 1 'base ''University
