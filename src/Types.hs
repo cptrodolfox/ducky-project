@@ -48,7 +48,7 @@ type GrantId = Integer
 type ProjectId = Integer
 
 -- | A ByteString that represents a legislation, set of laws governing an
--- | activity, resource, etc.
+-- activity, resource, etc.
 type Legislation = ByteString
 
 -- | An Int representing a number of years.
@@ -114,7 +114,7 @@ deriveSafeCopy 0 'base ''Department
 type Departments = Map DeptId Department
 
 -- | The second level of organization inside a university.
--- | Example: School of Natural Sciences.
+-- Example: School of Natural Sciences.
 data School = School { school_name :: !Name -- ^The School's name.
                      , departments :: !Departments -- ^The departments that
                                                    -- belong to the school.
@@ -137,14 +137,22 @@ data Funder = NGO Name Nationality -- ^No governmental organizations.
             deriving (Show)
 deriveSafeCopy 0 'base ''Funder
 
+-- | A promise from a funder to give and amount of money to a grant.
+data Pledge = Pledge FunderId Money
+            deriving (Show, Eq)
+deriveSafeCopy 0 'base ''Pledge
+
+-- | A List of pledges of a Grant.
+type Pledges = [Pledge]
+
 -- | A grant that funds projects and is given by a funder.
 data Grant = Grant { grant_name        :: !Name -- ^The grant's name.
                    , grant_legislation :: !Legislation -- ^The grant's
                                                        -- legislation.
                    , grant_amount      :: !Money -- ^The grant's amount.
-                   , grant_funders     :: [FunderId] -- ^Funding institutions.
+                   , grant_pledges     :: !Pledges -- ^Funding institutions.
                    } deriving (Show)
-deriveSafeCopy 0 'base ''Grant
+deriveSafeCopy 1 'base ''Grant
 
 -- | An assignation of a grant to a project by a given amount.
 data Assignation = Assignation GrantId ProjectId Money
@@ -188,16 +196,27 @@ data Result = Publication { pub_title    :: !Name -- ^The publication's title.
             deriving (Show)
 deriveSafeCopy 0 'base ''Result
 
+-- | A Student or Employee that works on a project.
+data Participant = PStudent Id -- ^The participant is a student.
+                 | PEmployee Id -- ^The participant is an employee.
+                 deriving (Show, Eq, Ord)
+deriveSafeCopy 0 'base ''Participant
+
+-- | A list of participants of a project.
+type Participants = [Participant]
+
 -- | A project inside the university.
-data Project = Project { project_title       :: !Name -- ^The project's name.
-                       , project_description :: !ByteString -- ^The project's
+data Project = Project { project_title        :: !Name -- ^The project's name.
+                       , project_description  :: !ByteString -- ^The project's
                                                             -- description.
-                       , project_budget      :: !Money -- ^The project's
+                       , project_budget       :: !Money -- ^The project's
                                                        -- assigned budget.
-                       , project_results     :: ![ResultId] -- ^The projects
+                       , project_results      :: ![ResultId] -- ^The projects
                                                             -- results.
+                       , project_participants :: !Participants -- ^The project's
+                                                               -- participants.
                        } deriving (Show)
-deriveSafeCopy 0 'base ''Project
+deriveSafeCopy 1 'base ''Project
 
 --------------------------------------------------------------------------------
 ---------------------- Types Synonyms and ADT for Database ---------------------
@@ -246,6 +265,10 @@ data University = University { name         ::  !Name
                                                              -- inside the
                                                              -- university.
                              , funders      :: !Funders -- ^The Funder parties
-                                                   -- related to the university.
+                                                        -- related to the
+                                                        -- university.
+                             , grants       :: !Grants -- ^The grants given to
+                                                       -- projects inside the
+                                                       -- university.
                              } deriving (Show)
-deriveSafeCopy 0 'base ''University
+deriveSafeCopy 1 'base ''University

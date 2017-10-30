@@ -14,45 +14,46 @@ module Database where
 
 import           Control.Applicative
 import           Control.Monad.Reader (ask)
-import           Control.Monad.State  (modify)
+import           Control.Monad.State  (modify, state)
 import           Data.Acid
 import           Data.ByteString      (ByteString)
 import qualified Data.List            as L
-import           Data.Map             (Map, insert, null, singleton, (!))
-import           Prelude              hiding (id, null)
+import           Data.Map             (Map, insert, lookup, null, singleton,
+                                       (!))
+import           Prelude              hiding (id, lookup, null, pi)
 import           Types
 
 -------------------------------------------------------------------
 ----------------------Helper functions-----------------------------
 -------------------------------------------------------------------
 -- | Updates the students database inside the university, the update is given by
--- | a function.
+-- a function.
 updateStudents :: University -> (Students -> Students) -> University
 updateStudents uni@University{students = sts} f = uni {students = f sts}
 
 -- | Updates the employees database inside the university, the update is given
--- | by a function.
+-- by a function.
 updateEmployees :: University -> (Employees -> Employees) -> University
 updateEmployees uni@University{employees = emps} f = uni {employees = f emps}
 
 -- | Updates the schools database inside the university, the update is given by
--- | a function.
+-- a function.
 updateSchools :: University -> (Schools -> Schools) -> University
 updateSchools uni@University{schools = schcs} f = uni {schools = f schcs}
 
 -- | Updates the projects database inside the university, the update is given by
--- | a function
+-- a function
 updateProjects :: University -> (Projects -> Projects) -> University
 updateProjects uni@University{projects = pros} f = uni {projects = f pros}
 
 -- | Updates the assignations database inside the university, the update is
--- | given by a function.
+-- given by a function.
 updateAssignations :: University -> (Assignations -> Assignations) -> University
 updateAssignations uni@University{assignations = assigns} f =
   uni {assignations = f assigns}
 
 -- | Updates the funders database of the university, the update is given by a
--- | function.
+-- function.
 updateFunders :: University -> (Funders -> Funders) -> University
 updateFunders uni@University{funders = fs} f = uni {funders = f fs}
 
@@ -61,14 +62,25 @@ updateDepts' :: School -> (Departments -> Departments) -> School
 updateDepts' sch@School{departments = dps} f = sch {departments = f dps}
 
 -- | Updates the departments database inside a school inside the university, the
--- | update is given by a function. The school is assumed to exist inside the
--- | university.
+-- update is given by a function. The school is assumed to exist inside the
+-- university.
 updateDepts :: SchoolId -> University -> (Departments -> Departments)
   -> University
 updateDepts sId uni@University{schools = schs} f = uni {schools = g schs}
   where
     g = (\s -> insert sId (updateDepts' (s ! sId) f) s)
 
+-- | Updates the person's pi value.
+updatePI :: Bool -> Person -> Person
+updatePI v person@Person{pi = p} = person {pi = v}
+
+-- | Find Student inside University.
+findStudent :: Id -> University -> Maybe Student
+findStudent idn University{students = sts} = lookup idn sts
+
+-- | Find Employee inside University.
+findEmployee :: Id -> University -> Maybe Employee
+findEmployee idn University{employees = emps} = lookup idn emps
 -------------------------------------------------------------------
 ----------------------Database additions---------------------------
 -------------------------------------------------------------------
@@ -128,11 +140,20 @@ addFunder fundId fund = modify go
                                   else insert fundId fund funds)
 
 -- | Adds a department to a school inside the university, a check for
--- | the consistency of the parameters should be done before hand.
+-- the consistency of the parameters should be done before hand.
 addDepartment :: DeptId -> Department -> SchoolId -> Update University ()
 addDepartment deptId dept schId = modify go
   where
     go uni = updateDepts schId uni (\dps -> insert deptId dept dps)
+
+-- | Adds a pledge to a grant inside the university, returns the updated Grant
+-- if the Grant does not exist returns Nothing
+addPledge :: GrantId -> Pledge -> Update University (Maybe Grant)
+addPledge gId pleg = state go
+  where
+    go uni = (\x -> (x, uni)) . fmap (\g@Grant{grant_pledges = ps}
+                           -> g {grant_pledges = pleg : ps})
+             . lookup gId $ grants uni
 -------------------------------------------------------------------
 ----------------------Database queries  ---------------------------
 -------------------------------------------------------------------
@@ -160,6 +181,74 @@ getAssignations = assignations <$> ask
 getFunders :: Query University Funders
 getFunders = funders <$> ask
 
+-- | Retrieves the PI status of a student given the id number.
+getStudentPI :: Id -> Query University Bool
+getStudentPI idn = (\(Student person) -> pi person)
+  . flip (!) idn . students <$> ask
+
+-- | Retrieves a student by his/her id number, if none is found returns Nothing.
+getStudent :: Id -> Query University (Maybe Student)
+getStudent idn = findStudent idn <$> ask
+
+-- | Retrieves a employee by his/her id number, if none is found returns
+-- Nothing.
+getEmployee :: Id -> Query University (Maybe Employee)
+getEmployee idn = findEmployee idn <$> ask
+
+-- | Retrieves a project, If the project does not exist returns Nothing.
+getProject :: ProjectId -> Query University (Maybe Project)
+getProject pId = lookup pId . projects <$> ask
+
+-- | Retrieves a grant, If the grant does not exist returns Nothing.
+getGrant :: GrantId -> Query University (Maybe Grant)
+getGrant gId = lookup gId . grants <$> ask
+
+-- | Retrieves the project's participants, If the project does not exist returns
+-- Nothing.
+getParticipants :: ProjectId -> Query University (Maybe Participants)
+getParticipants pId = fmap project_participants . lookup pId . projects <$> ask
+
+-- | Retrieves the project's results, If the project does not exist returns
+-- Nothing.
+getResults :: ProjectId -> Query University (Maybe [ResultId])
+getResults pId = fmap project_results . lookup pId . projects <$> ask
+
+-- | Retrieves the grants and amount of money associated to a project, returns
+-- an empty list if no grants are associated or if the project does not exist.
+getGrantsOfProject :: ProjectId -> Query University [(GrantId, Money)]
+getGrantsOfProject proId = foldr (\(Assignation grant pro m) l ->
+                                    if pro == proId
+                                    then (grant, m) : l
+                                    else l) [] . assignations <$> ask
+
+-- | Retrieves the projects associated to a grant, returns an empty list if no
+-- projects are associated or if the grant does not exist.
+getProjectsOfGrant :: GrantId -> Query University [ProjectId]
+getProjectsOfGrant gId = foldr (\(Assignation g pro _) l ->
+                                  if g == gId
+                                  then pro : l
+                                  else l) [] . assignations <$> ask
+
+-- | Retrieves the funders of a grant, returns Nothing if the grant does not
+-- exist.
+getFundersGrant :: GrantId -> Query University (Maybe [FunderId])
+getFundersGrant gId = fmap (map (\(Pledge funder _) -> funder))
+  . fmap grant_pledges . lookup gId . grants <$> ask
+
+-------------------------------------------------------------------
+------------------- Changing values in database -------------------
+-------------------------------------------------------------------
+
+-- | Changes the PI status of a student given the id number.
+setStudentPI :: Bool -> Id -> Update University ()
+setStudentPI v idn = modify go
+  where
+    go uni = updateStudents uni $ (\sts ->
+                                     let f = \(Student person@Person{pi = p}) np
+                                           -> Student (person  {pi = np})
+                                     in insert idn (f (sts ! idn) v) sts)
+-- |
+
 -------------------------------------------------------------------
 ------------------- Making the transactions acidic-----------------
 -------------------------------------------------------------------
@@ -169,10 +258,19 @@ makeAcidic ''University ['addStudent
                         , 'addProject
                         , 'addAssignation
                         , 'addFunder
+                        , 'addDepartment
+                        , 'addPledge
                         , 'getStudents
                         , 'getEmployees
                         , 'getSchools
                         , 'getProjects
                         , 'getAssignations
                         , 'getFunders
+                        , 'getStudentPI
+                        , 'getStudent
+                        , 'getEmployee
+                        , 'getGrantsOfProject
+                        , 'getProjectsOfGrant
+                        , 'getParticipants
+                        , 'setStudentPI
                         ]
