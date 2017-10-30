@@ -1,5 +1,4 @@
 -------------------------------------------------------------------
---
 -- Module : Types
 -- Authors : William R. Arellano, Paul Silva.
 -- Description : This module contains the types and ADTs used
@@ -11,7 +10,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 --{-# LANGUAGE TypeFamilies       #-}
 
-module Types where
+module Types2 where
 
 import           Data.Acid
 import           Data.ByteString.Char8 (ByteString)
