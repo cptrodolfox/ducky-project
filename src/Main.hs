@@ -28,6 +28,8 @@ emptySchools = empty :: Schools
 emptyAssignations = [] :: Assignations
 emptyFunders = empty :: Funders
 emptyProjects = empty :: Projects
+emptyGrants = empty :: Grants
+emptyResults = empty :: Results
 
 -- | Creates a University from a name, and with empty databases.
 createUniversity :: Name -> University
@@ -38,6 +40,8 @@ createUniversity n = University { name = n
                                 , projects = emptyProjects
                                 , assignations = emptyAssignations
                                 , funders = emptyFunders
+                                , grants = emptyGrants
+                                , results = emptyResults
                                 }
 
 
@@ -54,7 +58,7 @@ main = do
   fname <- getLine
   putStrLn "Please write the student's last name: "
   lname <- getLine
-  putStrLn "Please write the student's brithday first year, second month and third day"
+  putStrLn "Please write the student's birthday first year, second month and third day"
   yS <- getLine
   mS <- getLine
   dS <- getLine
