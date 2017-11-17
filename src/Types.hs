@@ -97,8 +97,8 @@ data Employee = Employee Person Degree
 deriveSafeCopy 0 'base ''Employee
 
 -- | A student inside the university.
-data Student = Student Person
-             deriving (Show)
+data Student = Student { person :: !Person -- ^A student has the type person.
+                       } deriving (Show)
 deriveSafeCopy 0 'base ''Student
 
 -- | The third level of organization inside a university.
