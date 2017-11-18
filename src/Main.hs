@@ -14,9 +14,9 @@
 module Main where
 
 import           Data.Acid
-import           Control.Monad (void)  --Check
+import           Control.Monad                                 (void)  --Check
 import           qualified Data.ByteString.Char8 as ByteString hiding (empty, putStrLn)
-import           qualified Data.Map as Map                     (empty)
+import           qualified Data.Map as Map                     (empty, elems, keys)
 import           Data.Time                                     (Day, fromGregorian, showGregorian)
 import           Database
 import           Prelude                                       hiding (id)
@@ -28,14 +28,14 @@ import           System.IO.Unsafe  --Check
 --------------------------------------------------------------------
 ------------------- Initial Values for databases--------------------
 --------------------------------------------------------------------
-emptyStudents = empty :: Students
-emptyEmployees = empty :: Employees
-emptySchools = empty :: Schools
+emptyStudents = Map.empty :: Students
+emptyEmployees = Map.empty :: Employees
+emptySchools = Map.empty :: Schools
 emptyAssignations = [] :: Assignations
-emptyFunders = empty :: Funders
-emptyProjects = empty :: Projects
-emptyGrants = empty :: Grants
-emptyResults = empty :: Results
+emptyFunders = Map.empty :: Funders
+emptyProjects = Map.empty :: Projects
+emptyGrants = Map.empty :: Grants
+emptyResults = Map.empty :: Results
 emptyResultsId = [] :: [ResultId]
 emptyParticipants = [] :: Participants
 
@@ -55,7 +55,7 @@ createUniversity n = University { name = n
 
 main :: IO ()
 main = do 
-state <- openLocalState $ createUniversity $ ByteString.pack "test"
+  state <- openLocalState $ createUniversity $ ByteString.pack "test"
   startGUI defaultConfig $ setup state
 
 -- | setup controls de UI implementation
@@ -69,7 +69,7 @@ setup state window = void $ do
   buttonAdd <- UI.button # set UI.text "Add Project"
   -- buttonRemove <- UI.button # set UI.text "Remove Project"
   buttonShStudent <- UI.button # set UI.text "Show Students"
-  buttonAddStudent <- UI.button # set UI.text "Add Student"
+  -- buttonAddStudent <- UI.button # set UI.text "Add Student"
   -- buttonRmStudent <- UI.button # set UI.text "Remove Student"
   
   -- | Titles for the Project Table
@@ -86,7 +86,7 @@ setup state window = void $ do
   canvas <- UI.div #+ [element header, 
                        column [ grid [ map element [title, description, budget, participants], 
                                        map column [prTitle , prDescription, prBudget, prStudent]] # set style [("border","solid black 1px")]],
-                       grid [map element [buttonAdd, buttonShStudent, buttonAddStudent]]]
+                       grid [map element [buttonAdd, buttonShStudent]]]
   
   getBody window 
     #+ [ element canvas ]
