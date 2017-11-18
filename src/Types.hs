@@ -99,7 +99,7 @@ deriveSafeCopy 0 'base ''Employee
 -- | A student inside the university.
 data Student = Student { person :: !Person -- ^A student has the type person.
                        } deriving (Show)
-deriveSafeCopy 0 'base ''Student
+deriveSafeCopy 1 'base ''Student
 
 -- | The third level of organization inside a university.
 data Department = Department { dept_name     :: !Name -- ^The department's name.
@@ -197,10 +197,10 @@ data Result = Publication { pub_title    :: !Name -- ^The publication's title.
 deriveSafeCopy 0 'base ''Result
 
 -- | A Student or Employee that works on a project.
-data Participant = PStudent Id -- ^The participant is a student.
-                 | PEmployee Id -- ^The participant is an employee.
+data Participant = PStudent { student_id :: !Id } -- ^The participant is a student.
+                 | PEmployee { employee_id :: !Id } -- ^The participant is an employee.
                  deriving (Show, Eq, Ord)
-deriveSafeCopy 0 'base ''Participant
+deriveSafeCopy 1 'base ''Participant
 
 -- | A list of participants of a project.
 type Participants = [Participant]
